@@ -1,0 +1,550 @@
+/* Time Trust — theme contract: dark default under :root, light under
+   :root[data-theme="light"]. No prefers-color-scheme. Base element rules are
+   scoped to #app so they never fight the shared top bar. */
+
+:root {
+  --accent: #0891b2;
+  /* text-on-background accent (AA in each theme) */
+  --accent-text: #55c4de;
+  --bg: #0b1418;
+  --panel: #121d23;
+  --panel-2: #18272f;
+  --border: #2c4350;
+  --text: #e6f1f5;
+  --text-dim: #9fb9c4;
+  --ok-text: #63d997;
+  --ok-fill: rgba(34, 154, 84, 0.16);
+  --bad-text: #ff9d94;
+  --bad-fill: rgba(220, 76, 62, 0.16);
+  --warn-text: #ffcd6b;
+  --warn-fill: rgba(214, 158, 32, 0.14);
+  --focus: #7fd9ee;
+}
+
+:root[data-theme='light'] {
+  --accent: #0891b2;
+  --accent-text: #086f88;
+  --bg: #f2f8fa;
+  --panel: #ffffff;
+  --panel-2: #e9f2f5;
+  --border: #b0ccd6;
+  --text: #12232a;
+  --text-dim: #40606c;
+  --ok-text: #0e6b33;
+  --ok-fill: rgba(21, 128, 61, 0.1);
+  --bad-text: #ac241a;
+  --bad-fill: rgba(196, 48, 34, 0.09);
+  --warn-text: #7a5200;
+  --warn-fill: rgba(191, 143, 31, 0.13);
+  --focus: #086f88;
+}
+
+html {
+  background-color: #0b1418;
+  color-scheme: dark;
+}
+html[data-theme='light'] {
+  background-color: #f2f8fa;
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.55;
+}
+
+#app {
+  max-width: 74rem;
+  margin: 0 auto;
+  padding: 0 clamp(0.9rem, 3vw, 2rem) 2.5rem;
+}
+
+#app :focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+#app a {
+  color: var(--accent-text);
+  text-decoration: underline; /* persistent — never color alone */
+}
+
+#app h2 {
+  font-size: 1.3rem;
+  margin: 0 0 0.35rem;
+}
+#app h3 {
+  font-size: 1.02rem;
+  margin: 1.1rem 0 0.4rem;
+}
+#app p {
+  margin: 0.5rem 0;
+}
+#app code,
+#app .mono {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 0.92em;
+}
+#app code {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 0.25em;
+}
+
+/* BEGIN cl-hero standard — managed, keep in sync across fleet */
+.cl-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:clamp(1rem,4vw,3rem);flex-wrap:wrap;margin:clamp(1rem,3vw,2rem) 0 1.5rem;}
+.cl-hero-main{flex:1 1 22rem;min-width:min(100%,20rem);}
+.cl-hero-title{margin:0;font-size:clamp(1.6rem,3.8vw,2.7rem);font-weight:700;line-height:1.1;letter-spacing:.01em;}
+.cl-hero-sub{margin:.4rem 0 0;font-size:clamp(.9rem,1.6vw,1.05rem);letter-spacing:.01em;opacity:.85;}
+.cl-hero-desc{margin:.55rem 0 0;font-size:1rem;line-height:1.5;color:var(--text-dim);max-width:60ch;}
+.cl-hero-why{flex:0 1 min(40%,26rem);min-width:min(100%,15rem);border:1px solid var(--border);border-radius:10px;padding:.85rem 1.05rem;background:color-mix(in oklab,var(--accent) 6%,transparent);}
+.cl-hero-why-label{display:block;font-size:.68rem;font-weight:700;letter-spacing:.14em;}
+.cl-hero-why-text{margin:.35rem 0 0;font-size:.95rem;line-height:1.5;}
+@media (max-width:640px){.cl-hero{flex-direction:column;}.cl-hero-why{flex-basis:auto;width:100%;}}
+/* END cl-hero standard */
+
+/* ---------- cards & layout ---------- */
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.1rem 1.25rem 1.3rem;
+  margin: 1.1rem 0;
+}
+
+.card-intro {
+  color: var(--text-dim);
+  max-width: 72ch;
+}
+
+.spec-tag {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--accent-text);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.05rem 0.6rem;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.scope-note {
+  margin-top: 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.55rem 0.8rem;
+  background: var(--panel-2);
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.subcard {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.8rem 0.95rem;
+}
+.subcard h3 {
+  margin-top: 0;
+}
+
+/* ---------- controls ---------- */
+
+#app button {
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--text);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.42rem 0.85rem;
+  cursor: pointer;
+}
+#app button:hover {
+  border-color: var(--accent-text);
+}
+#app button.primary {
+  border-color: var(--accent-text);
+  font-weight: 600;
+}
+#app button:disabled {
+  cursor: not-allowed;
+  color: var(--text-dim);
+  border-style: dashed;
+}
+
+.control-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0.6rem 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin: 0.5rem 0;
+}
+.field > label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+.field input[type='range'] {
+  width: 100%;
+  max-width: 26rem;
+  accent-color: var(--accent);
+}
+.field input[type='text'],
+.field input[type='number'],
+.field select {
+  font: inherit;
+  color: var(--text);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.35rem 0.55rem;
+  max-width: 12rem;
+}
+.field select {
+  appearance: none;
+  padding-right: 1.7rem;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position:
+    right 0.9rem top 55%,
+    right 0.55rem top 55%;
+  background-size: 0.35rem 0.35rem;
+  background-repeat: no-repeat;
+}
+
+.readout {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 0.92rem;
+}
+
+/* ---------- the master clock ---------- */
+
+.clock-now {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: clamp(1.05rem, 2.6vw, 1.5rem);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.clock-offset {
+  color: var(--accent-text);
+  font-weight: 700;
+}
+
+.timeline-wrap {
+  margin-top: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel-2);
+  padding: 0.5rem;
+  color: var(--text-dim);
+  overflow-x: auto;
+}
+.timeline-wrap svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ---------- chips: crypto result vs verdict vs integrity (kept separate) ---------- */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.12rem 0.7rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  background: var(--panel);
+}
+.chip-math {
+  border-style: dashed; /* visually distinct from verdict chips even in grayscale */
+}
+.chip-math.is-ok {
+  color: var(--accent-text);
+}
+.chip-math.is-bad {
+  color: var(--bad-text);
+  background: var(--bad-fill);
+}
+.chip-verdict {
+  border-width: 2px;
+  color: var(--text);
+}
+.integrity {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  border-radius: 8px;
+  padding: 0.35rem 0.6rem;
+  margin-top: 0.45rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.integrity.is-ok {
+  color: var(--ok-text);
+  background: var(--ok-fill);
+}
+.integrity.is-alarm {
+  color: var(--bad-text);
+  background: var(--bad-fill);
+  border: 1.5px solid var(--bad-text);
+}
+
+.checks {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+.checks li {
+  display: flex;
+  gap: 0.45rem;
+  align-items: baseline;
+  padding: 0.15rem 0;
+  font-size: 0.88rem;
+}
+.checks .icon {
+  flex: 0 0 auto;
+  font-weight: 700;
+}
+.checks .pass .icon {
+  color: var(--ok-text);
+}
+.checks .fail .icon {
+  color: var(--bad-text);
+}
+.checks .detail {
+  color: var(--text-dim);
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  display: block;
+}
+
+.result-block {
+  margin-top: 0.6rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.6rem;
+}
+
+/* ---------- cert verification stepper ---------- */
+
+.stepper {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.6rem;
+  margin: 0.8rem 0 0.4rem;
+}
+.step {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel-2);
+  padding: 0.6rem 0.75rem;
+  font-size: 0.86rem;
+  transition: border-color 0.25s, background-color 0.25s;
+}
+.step .step-k {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+}
+.step.is-active {
+  border-color: var(--accent-text);
+  outline: 1px solid var(--accent-text);
+}
+.step .step-out {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  overflow-wrap: anywhere;
+  margin-top: 0.3rem;
+}
+@media (prefers-reduced-motion: reduce) {
+  .step {
+    transition: none;
+  }
+}
+
+/* ---------- TOTP window strip ---------- */
+
+.totp-scroll {
+  overflow-x: auto;
+  margin: 0.7rem 0 0.2rem;
+}
+.totp-strip {
+  display: flex;
+  gap: 0.4rem;
+  list-style: none;
+  margin: 0;
+  padding: 0.3rem;
+}
+.totp-strip li {
+  flex: 1 0 6.4rem;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 0.4rem 0.5rem;
+  text-align: center;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+}
+.totp-strip li.in-band {
+  border-style: solid;
+  border-color: var(--accent-text);
+  color: var(--text);
+}
+.totp-strip li.is-phone {
+  background: var(--panel);
+  outline: 2px solid var(--accent);
+}
+.totp-strip .totp-code {
+  display: block;
+  font-size: 1.02rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.totp-strip .totp-tag {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+/* ---------- token / hex displays ---------- */
+
+.token-box {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+  margin: 0.5rem 0;
+}
+.tok-h {
+  color: var(--accent-text);
+}
+.tok-p {
+  color: var(--warn-text);
+}
+.tok-s {
+  color: var(--ok-text);
+}
+
+.hexdump {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 0.76rem;
+  line-height: 1.7;
+  overflow-x: auto;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  overflow-wrap: anywhere;
+}
+.hexdump .hl-validity {
+  color: var(--warn-text);
+  font-weight: 700;
+  text-decoration: underline;
+}
+.hexdump .hl-sig {
+  color: var(--ok-text);
+}
+
+#app details {
+  margin-top: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5rem 0.8rem;
+  background: var(--panel);
+}
+#app summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--accent-text);
+}
+
+/* ---------- tables ---------- */
+
+#app table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.88rem;
+  margin: 0.5rem 0;
+}
+#app th,
+#app td {
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  padding: 0.35rem 0.6rem 0.35rem 0;
+  vertical-align: top;
+}
+#app th {
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- scripture footer ---------- */
+
+.scripture-footer {
+  max-width: 74rem;
+  margin: 2.5rem auto 0;
+  padding: 1.2rem clamp(0.9rem, 3vw, 2rem) 1.6rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .grid-2,
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
