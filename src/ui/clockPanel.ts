@@ -13,6 +13,7 @@ import {
 } from '../scenario';
 import { CLOCK_MAX_OFFSET_MS, CLOCK_MIN_OFFSET_MS, DEMO_EPOCH_MS, HOUR, MIN, SEC, fmtOffset, fmtUtc } from '../time/clock';
 import { byId, clear, el } from './dom';
+import type { Lab, LabEvent, Preset } from './lab';
 
 export interface ClockControl {
   get(): number;
@@ -141,7 +142,71 @@ const MOMENTS: Array<{ label: string; offsetMs: number }> = [
   { label: 'T−90 m — cert not yet valid', offsetMs: -90 * MIN },
 ];
 
-export function renderClockPanel(clock: ClockControl): void {
+/** Scenario presets — each encodes a STORY: clock + per-panel controls + focus. */
+const PRESETS: Preset[] = [
+  {
+    id: 'jwt-split',
+    label: 'JWT split-brain',
+    blurb: 'One token, two servers 90 s apart: valid here, expired there.',
+    focus: 'jwt-panel',
+    clockOffsetMs: 14 * MIN + 30 * SEC,
+    panels: { jwt: { skew: 90, leeway: 0 } },
+  },
+  {
+    id: 'url-resurrect',
+    label: 'Resurrect an expired URL',
+    blurb: 'Roll the server clock back an hour — the dead link works again.',
+    focus: 'url-panel',
+    clockOffsetMs: 21 * MIN,
+    panels: { url: { serverSkew: -3600, clientSkew: 0 } },
+  },
+  {
+    id: 'replay-slip',
+    label: 'Replay slips through',
+    blurb: 'Six minutes later, the slow server still calls the replay fresh.',
+    focus: 'replay-panel',
+    clockOffsetMs: 6 * MIN,
+    panels: { replay: { skewA: -240, skewB: 0, skewC: 240 } },
+  },
+  {
+    id: 'totp-wide',
+    label: 'TOTP window too wide',
+    blurb: '±2 windows and no used-code record — an intercepted code replays.',
+    focus: 'totp-panel',
+    clockOffsetMs: 0,
+    panels: { totp: { tolerance: 2, usedRecord: false } },
+  },
+];
+
+/** The guided tour: presets plus a pinned one-liner, walked one step at a time. */
+interface TourStep {
+  preset: Preset;
+  pin: string;
+}
+const TOUR: TourStep[] = [
+  { preset: PRESETS[0], pin: 'Same token bytes. Same valid signature. Opposite verdicts — only the clocks differ.' },
+  { preset: PRESETS[1], pin: 'No forgery happened. The MAC is genuinely valid; the server clock lied about "now".' },
+  { preset: PRESETS[2], pin: 'Nothing cryptographic tells the replay from the original. A slow clock re-opens the window.' },
+  {
+    preset: {
+      id: 'cert-expiry',
+      label: 'Certificate expiry',
+      blurb: '',
+      focus: 'cert-panel',
+      clockOffsetMs: 25 * HOUR,
+    },
+    pin: 'The signature is byte-for-byte identical to when it was "valid". Only the date comparison flipped.',
+  },
+];
+
+function applyPreset(clock: ClockControl, lab: Lab, preset: Preset): void {
+  clock.set(DEMO_EPOCH_MS + preset.clockOffsetMs);
+  for (const [id, opts] of Object.entries(preset.panels ?? {})) lab.setPanel(id, opts);
+  lab.scrollTo(preset.focus);
+  lab.flashAlarm(preset.focus);
+}
+
+export function renderClockPanel(clock: ClockControl, lab: Lab): void {
   const host = byId<HTMLElement>('clock-panel-body');
   clear(host);
 
@@ -219,6 +284,74 @@ export function renderClockPanel(clock: ClockControl): void {
   slider.addEventListener('input', () => clock.set(DEMO_EPOCH_MS + Number(slider.value) * 1000));
   clock.subscribe(redraw);
 
-  host.append(nowLine, sliderField, stepRow, momentsRow, zoomRow, timelineWrap, srSummary);
+  // ---- guided tour ----
+  const tourBanner = el('div', { class: 'tour-banner', role: 'status', 'aria-live': 'polite', hidden: 'hidden' });
+  function showTourStep(i: number): void {
+    if (i < 0 || i >= TOUR.length) {
+      tourBanner.hidden = true;
+      return;
+    }
+    const step = TOUR[i];
+    applyPreset(clock, lab, step.preset);
+    clear(tourBanner);
+    const next = el('button', { type: 'button', class: 'primary' }, i === TOUR.length - 1 ? 'Finish tour' : 'Next →');
+    next.addEventListener('click', () => showTourStep(i + 1));
+    const stop = el('button', { type: 'button' }, 'Exit');
+    stop.addEventListener('click', () => showTourStep(-1));
+    tourBanner.append(
+      el('span', { class: 'tour-step-n' }, `TOUR — STEP ${i + 1} OF ${TOUR.length}: ${step.preset.label}`),
+      el('p', { class: 'tour-pin' }, step.pin),
+      el('div', { class: 'control-row' }, next, stop),
+    );
+    tourBanner.hidden = false;
+  }
+  const tourCta = el('button', { type: 'button', class: 'tour-cta' }, '▶ Take the 30-second tour');
+  tourCta.addEventListener('click', () => showTourStep(0));
+
+  // ---- scenario presets ----
+  const presetGrid = el('div', { class: 'preset-grid' });
+  for (const p of PRESETS) {
+    const btn = el(
+      'button',
+      { type: 'button', class: 'preset-btn' },
+      el('span', { class: 'preset-title' }, p.label),
+      el('span', { class: 'preset-blurb' }, p.blurb),
+    );
+    btn.addEventListener('click', () => applyPreset(clock, lab, p));
+    presetGrid.append(btn);
+  }
+
+  // ---- event rail ("what just changed") ----
+  const railList = el('ul', {});
+  const rail = el(
+    'div',
+    { class: 'event-rail', role: 'log', 'aria-live': 'polite', 'aria-label': 'what just changed' },
+    el('span', { class: 'rail-label' }, 'WHAT JUST CHANGED'),
+    railList,
+  );
+  const events: LabEvent[] = [];
+  lab.onEvent((e) => {
+    events.unshift(e);
+    if (events.length > 4) events.pop();
+    clear(railList);
+    for (const ev of events) {
+      railList.append(el('li', {}, el('span', { class: 'ev-panel' }, `${ev.panel}: `), ev.text));
+    }
+  });
+
+  host.append(
+    nowLine,
+    el('div', { class: 'control-row' }, tourCta),
+    tourBanner,
+    el('p', { class: 'readout' }, 'Or jump straight to a scenario:'),
+    presetGrid,
+    sliderField,
+    stepRow,
+    momentsRow,
+    zoomRow,
+    timelineWrap,
+    srSummary,
+    rail,
+  );
   redraw(clock.get());
 }

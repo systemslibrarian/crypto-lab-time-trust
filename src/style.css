@@ -146,6 +146,125 @@ body {
   font-size: 0.9rem;
 }
 
+.analog {
+  margin: 0.1rem 0 0.6rem;
+  color: var(--text-dim);
+  font-size: 0.88rem;
+  border-left: 3px solid var(--accent);
+  padding-left: 0.7rem;
+}
+
+.quickfacts {
+  margin: 0.6rem 0 0.2rem;
+  padding-left: 1.1rem;
+  color: var(--text-dim);
+  max-width: 72ch;
+}
+.quickfacts li {
+  margin: 0.15rem 0;
+}
+.quickfacts strong {
+  color: var(--text);
+}
+
+/* Purposeful, action-triggered flash when a panel's verdict flips to alarm —
+   not idle motion. Disabled under reduced-motion and by the a11y gate. */
+@keyframes panel-flash {
+  0% {
+    box-shadow: 0 0 0 0 var(--bad-text);
+  }
+  100% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+}
+.panel-flash {
+  animation: panel-flash 0.9s ease-out 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .panel-flash {
+    animation: none;
+  }
+}
+
+/* ---------- presets, tour, event rail ---------- */
+
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.5rem;
+  margin: 0.7rem 0;
+}
+.preset-btn {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.55rem 0.75rem !important;
+}
+.preset-btn .preset-title {
+  font-weight: 700;
+}
+.preset-btn .preset-blurb {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  font-weight: 400;
+}
+
+.tour-cta {
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  padding: 0.6rem 1.1rem !important;
+  background: color-mix(in oklab, var(--accent) 22%, var(--panel-2)) !important;
+  border-color: var(--accent-text) !important;
+}
+
+.event-rail {
+  margin-top: 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel-2);
+  padding: 0.4rem 0.7rem;
+  min-height: 2.4rem;
+  font-size: 0.85rem;
+}
+.event-rail .rail-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+}
+.event-rail ul {
+  list-style: none;
+  margin: 0.2rem 0 0;
+  padding: 0;
+}
+.event-rail li {
+  padding: 0.1rem 0;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  color: var(--text);
+}
+.event-rail li .ev-panel {
+  color: var(--accent-text);
+  font-weight: 700;
+}
+
+.tour-banner {
+  border: 1.5px solid var(--accent-text);
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--accent) 10%, var(--panel));
+  padding: 0.6rem 0.85rem;
+  margin: 0.6rem 0;
+}
+.tour-banner .tour-step-n {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--accent-text);
+}
+.tour-banner .tour-pin {
+  font-weight: 600;
+}
+
 .grid-2 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));

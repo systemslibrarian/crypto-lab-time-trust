@@ -12,6 +12,7 @@ import { parseCertificate, tamperSignatureBit, verifyCertSignature, type Certifi
 import { validityChecks, validityState } from '../x509/validity';
 import type { ClockControl } from './clockPanel';
 import { byId, clear, el } from './dom';
+import type { Lab } from './lab';
 import { resultBlock } from './verdict';
 
 const STATE_LABEL = {
@@ -45,9 +46,10 @@ function hexDump(cert: Certificate): HTMLElement {
   return box;
 }
 
-export function renderCertPanel(clock: ClockControl, scenario: Scenario): void {
+export function renderCertPanel(clock: ClockControl, scenario: Scenario, lab: Lab): void {
   const host = byId<HTMLElement>('cert-panel-body');
   clear(host);
+  let lastState: keyof typeof STATE_LABEL | null = null;
 
   const cert = scenario.cert;
   const tampered = parseCertificate(tamperSignatureBit(cert.der));
@@ -123,6 +125,11 @@ export function renderCertPanel(clock: ClockControl, scenario: Scenario): void {
     resultHost.append(resultBlock(dec, dec.verdict)); // no skew in this panel: verdicts here are always truthful
     const newState = `Certificate status at this clock: ${STATE_LABEL[state]}`;
     if (stateLine.textContent !== newState) stateLine.textContent = newState;
+    if (lastState !== null && state !== lastState) {
+      const words = { 'not-yet-valid': 'not yet valid', valid: 'valid', expired: 'expired' } as const;
+      lab.emit('Cert', `crossed into "${words[state]}" — same signature, different verdict`);
+    }
+    lastState = state;
   }
 
   const runBtn = el('button', { type: 'button', class: 'primary' }, 'Run verification step-by-step');
@@ -179,4 +186,6 @@ export function renderCertPanel(clock: ClockControl, scenario: Scenario): void {
   host.append(summary, el('div', { class: 'control-row' }, runBtn), stepper, sigNote, resultHost, stateLine, expert);
   clock.subscribe(render);
   render(clock.get());
+
+  lab.register('cert', { sectionId: 'cert-panel', title: 'Certificate validity' });
 }

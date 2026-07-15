@@ -9,9 +9,10 @@ import { MIN, fmtSkew, fmtUtc } from '../time/clock';
 import { DEMO_EPOCH_MS } from '../time/clock';
 import type { ClockControl } from './clockPanel';
 import { byId, clear, el } from './dom';
+import type { Lab } from './lab';
 import { resultBlock } from './verdict';
 
-export function renderUrlPanel(clock: ClockControl, scenario: Scenario): void {
+export function renderUrlPanel(clock: ClockControl, scenario: Scenario, lab: Lab): void {
   const host = byId<HTMLElement>('url-panel-body');
   clear(host);
 
@@ -36,6 +37,7 @@ export function renderUrlPanel(clock: ClockControl, scenario: Scenario): void {
   const hint = el('p', { class: 'scope-note' });
 
   let seq = 0;
+  let wasResurrected = false;
   async function render(nowMs: number): Promise<void> {
     const my = ++seq;
     const trueSec = Math.floor(nowMs / 1000);
@@ -46,6 +48,13 @@ export function renderUrlPanel(clock: ClockControl, scenario: Scenario): void {
       verifySignedUrl(scenario.urlSecret, scenario.signedUrl, trueSec),
     ]);
     if (my !== seq) return;
+
+    const resurrected = truth.verdict === 'reject' && dec.verdict === 'accept';
+    if (resurrected && !wasResurrected) {
+      lab.emit('URL', 'expired URL resurrected by rolling the server clock back — no forgery');
+      lab.flashAlarm('url-panel');
+    }
+    wasResurrected = resurrected;
 
     const clientThinks = clientSec <= scenario.signedUrl.expiresSec ? 'still fresh' : 'expired';
     clientView.textContent =
@@ -102,4 +111,24 @@ export function renderUrlPanel(clock: ClockControl, scenario: Scenario): void {
   );
   clock.subscribe((ms) => void render(ms));
   void render(clock.get());
+
+  lab.register('url', {
+    sectionId: 'url-panel',
+    title: 'Signed URL — whose clock?',
+    set(opts) {
+      if (typeof opts.serverSkew === 'number') {
+        serverSkewSec = opts.serverSkew;
+        serverSlider.value = String(serverSkewSec);
+        serverLabel.textContent = `SERVER clock offset: ${fmtSkew(serverSkewSec)} — the clock the verifier actually reads`;
+        serverSlider.setAttribute('aria-valuetext', fmtSkew(serverSkewSec));
+      }
+      if (typeof opts.clientSkew === 'number') {
+        clientSkewSec = opts.clientSkew;
+        clientSlider.value = String(clientSkewSec);
+        clientLabel.textContent = `Client (browser) clock offset: ${fmtSkew(clientSkewSec)} — you control it, and it does not matter`;
+        clientSlider.setAttribute('aria-valuetext', fmtSkew(clientSkewSec));
+      }
+      void render(clock.get());
+    },
+  });
 }

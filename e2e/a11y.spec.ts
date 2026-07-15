@@ -13,6 +13,10 @@ async function prepare(page: Page): Promise<void> {
       el.classList.add('active', 'is-active', 'open');
     });
   });
+  // run a scenario preset so alarm states, the event rail, and flashes render
+  await page.getByRole('button', { name: /Resurrect an expired URL/ }).click().catch(() => {});
+  // open the guided tour so its banner is on screen for the scan
+  await page.getByRole('button', { name: /Take the 30-second tour/ }).click().catch(() => {});
   // drive the live demo so dynamic result regions render before the scan
   for (const b of await page.locator('#app button').all()) {
     const label = ((await b.textContent()) || '').toLowerCase();

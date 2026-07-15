@@ -8,9 +8,10 @@ import { verifyJwt } from '../jwt/jwt';
 import { SEC, fmtSkew, fmtUtc } from '../time/clock';
 import type { ClockControl } from './clockPanel';
 import { byId, clear, el } from './dom';
+import type { Lab } from './lab';
 import { resultBlock } from './verdict';
 
-export function renderJwtPanel(clock: ClockControl, scenario: Scenario): void {
+export function renderJwtPanel(clock: ClockControl, scenario: Scenario, lab: Lab): void {
   const host = byId<HTMLElement>('jwt-panel-body');
   clear(host);
 
@@ -62,6 +63,7 @@ export function renderJwtPanel(clock: ClockControl, scenario: Scenario): void {
   const splitNote = el('span', { class: 'readout' }, '');
 
   let seq = 0;
+  let wasSplit = false;
   async function render(nowMs: number): Promise<void> {
     const my = ++seq;
     const authNowSec = Math.floor(nowMs / 1000);
@@ -72,6 +74,13 @@ export function renderJwtPanel(clock: ClockControl, scenario: Scenario): void {
       verifyJwt(scenario.jwtToken, scenario.jwtKey, authNowSec, leewaySec), // truth = master clock
     ]);
     if (my !== seq) return;
+
+    const isSplit = auth.verdict !== rs.verdict;
+    if (isSplit && !wasSplit) {
+      lab.emit('JWT', 'split-brain — valid at the auth server, expired at the resource server');
+      lab.flashAlarm('jwt-panel');
+    }
+    wasSplit = isSplit;
 
     clear(authCard);
     authCard.append(
@@ -146,4 +155,21 @@ export function renderJwtPanel(clock: ClockControl, scenario: Scenario): void {
   clock.subscribe((ms) => void render(ms));
   updateControls();
   void render(clock.get());
+
+  lab.register('jwt', {
+    sectionId: 'jwt-panel',
+    title: 'JWT split-brain',
+    set(opts) {
+      if (typeof opts.skew === 'number') {
+        rsSkewSec = opts.skew;
+        skewSlider.value = String(rsSkewSec);
+      }
+      if (typeof opts.leeway === 'number') {
+        leewaySec = Math.max(0, opts.leeway);
+        leewayInput.value = String(leewaySec);
+      }
+      updateControls();
+      void render(clock.get());
+    },
+  });
 }

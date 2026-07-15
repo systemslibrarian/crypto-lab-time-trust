@@ -8,9 +8,10 @@ import { verifyToken } from '../token/token';
 import { fmtSkew, fmtUtc } from '../time/clock';
 import type { ClockControl } from './clockPanel';
 import { byId, clear, el } from './dom';
+import type { Lab } from './lab';
 import { integrityLine, mathChip, verdictChip } from './verdict';
 
-export function renderNodesPanel(clock: ClockControl, scenario: Scenario): void {
+export function renderNodesPanel(clock: ClockControl, scenario: Scenario, lab: Lab): void {
   const host = byId<HTMLElement>('nodes-panel-body');
   clear(host);
 
@@ -80,7 +81,13 @@ export function renderNodesPanel(clock: ClockControl, scenario: Scenario): void 
       );
     }
     const matrix = verdicts.join(',');
-    if (lastMatrix && matrix !== lastMatrix) flips++;
+    if (lastMatrix && matrix !== lastMatrix) {
+      flips++;
+      const accepts = verdicts.filter((v) => v === 'accept').length;
+      if (accepts > 0 && accepts < verdicts.length) {
+        lab.emit('Nodes', `token now disagrees across nodes (${accepts}/${verdicts.length} accept) — signature valid on all`);
+      }
+    }
     lastMatrix = matrix;
     const line =
       `Since page load: ${verifications} real Ed25519 verifications of the same 64-byte signature — ` +
@@ -115,4 +122,6 @@ export function renderNodesPanel(clock: ClockControl, scenario: Scenario): void 
   );
   clock.subscribe(render);
   render(clock.get());
+
+  lab.register('nodes', { sectionId: 'nodes-panel', title: 'Distributed nodes, one token' });
 }

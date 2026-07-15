@@ -159,33 +159,39 @@
         </aside>
       </header>
 
-      <section class="card" aria-labelledby="intro-h">
+      <section class="card" aria-labelledby="intro-h" id="intro-panel">
         <h2 id="intro-h">What is this?</h2>
         <p class="card-intro">
-          Every security check on this page is real: real Ed25519 signatures, real HMAC-SHA-256 tags,
-          verified by real code you can read. None of it is mocked. The one thing under your control is
+          Every security check on this page is <strong>real</strong> — real Ed25519 signatures, real
+          HMAC-SHA-256 tags, verified by code you can read. The one thing under your control is
           <strong>the clock</strong>. Drag it and watch verifiers change their minds about bytes that
-          never changed. The lesson underneath all six panels is a single sentence:
-          <strong>time is an unauthenticated input to authenticated systems.</strong> Cryptography can
-          prove <em>who</em> signed something and that it wasn't altered; it cannot prove <em>when</em>
-          "now" is. That gap is where these failures live.
+          never changed, because <strong>time is an unauthenticated input to authenticated
+          systems.</strong>
         </p>
-        <p class="card-intro">
-          Throughout, two indicators are kept deliberately separate: the
-          <span class="chip chip-math is-ok">cryptographic result</span> (did the math check out?) and
-          the <span class="chip chip-verdict">security verdict</span> (should we accept it?). When a
-          lying clock makes those two disagree — a valid signature on a decision that is wrong — the
-          panel raises an <strong>alarm</strong>, because a forged-but-accepted outcome is not a
-          success.
-        </p>
-        <p class="scope-note">
-          <strong>Not production crypto — a teaching demo.</strong> Keys and secrets are generated
-          fresh in your browser each visit and never leave it. What's real: the primitives and their
-          verifiers (validated against RFC known-answer tests). What's simulated: the passage of time
-          and the network between parties (there is no backend — "server clocks" are just numbers you
-          set). What this does <strong>not</strong> prove: that any specific real system is
-          vulnerable, or that better cryptography would fix it — the whole point is that it wouldn't.
-        </p>
+        <ul class="quickfacts">
+          <li><strong>Real:</strong> the primitives and their verifiers (RFC known-answer tested).</li>
+          <li><strong>Simulated:</strong> the passage of time and the network — no backend; "server clocks" are numbers you set.</li>
+          <li><strong>Do first:</strong> press <em>Take the 30-second tour</em> below, or just grab the clock slider.</li>
+        </ul>
+        <details>
+          <summary>The longer framing (why this matters, and the two indicators to watch)</summary>
+          <p class="card-intro">
+            Cryptography can prove <em>who</em> signed something and that it wasn't altered; it cannot
+            prove <em>when</em> "now" is. That gap is where every failure here lives. Throughout, two
+            indicators are kept deliberately separate: the
+            <span class="chip chip-math is-ok">cryptographic result</span> (did the math check out?) and
+            the <span class="chip chip-verdict">security verdict</span> (should we accept it?). When a
+            lying clock makes those two disagree — a valid signature on a decision that is wrong — the
+            panel raises an <strong>alarm</strong>, because a forged-but-accepted outcome is not a
+            success.
+          </p>
+          <p class="scope-note">
+            <strong>Not production crypto — a teaching demo.</strong> Keys and secrets are generated
+            fresh in your browser each visit and never leave it. What this does <strong>not</strong>
+            prove: that any specific real system is vulnerable, or that better cryptography would fix it
+            — the whole point is that it wouldn't.
+          </p>
+        </details>
       </section>
 
       <section class="card" aria-labelledby="clock-h">
@@ -199,8 +205,9 @@
         <div id="clock-panel-body"></div>
       </section>
 
-      <section class="card" aria-labelledby="cert-h">
+      <section class="card" aria-labelledby="cert-h" id="cert-panel">
         <h2 id="cert-h">1 · Certificate validity <span class="spec-tag">X.509 · RFC 5280 §4.1.2.5</span></h2>
+        <p class="analog">Real-world analog: the expired-TLS-certificate outages that take whole services offline for hours.</p>
         <p class="card-intro">
           A real, hand-encoded X.509 certificate, self-signed with Ed25519. Run the verifier
           step-by-step and watch: parsing and the signature check produce the
@@ -217,8 +224,9 @@
         </p>
       </section>
 
-      <section class="card" aria-labelledby="jwt-h">
+      <section class="card" aria-labelledby="jwt-h" id="jwt-panel">
         <h2 id="jwt-h">2 · JWT split-brain <span class="spec-tag">RFC 7519 §4.1 · HS256</span></h2>
+        <p class="analog">Real-world analog: the OAuth/JWT clock-skew auth bugs where a token works on one service and 401s on the next.</p>
         <p class="card-intro">
           One HMAC-SHA-256 token, checked by two servers whose clocks differ by 90 seconds. The
           <code>exp</code>/<code>nbf</code> claims are authenticated (they're inside the MAC), but each
@@ -228,8 +236,9 @@
         <div id="jwt-panel-body"></div>
       </section>
 
-      <section class="card" aria-labelledby="totp-h">
+      <section class="card" aria-labelledby="totp-h" id="totp-panel">
         <h2 id="totp-h">3 · TOTP acceptance window <span class="spec-tag">RFC 6238 · RFC 4226</span></h2>
+        <p class="analog">Real-world analog: the authenticator-app "code rejected / code still works" complaints, and phishing kits that replay a just-typed 2FA code.</p>
         <p class="card-intro">
           A real 6-digit TOTP code, 30-second step. The verifier accepts a <em>band</em> of windows to
           tolerate skew — and as you widen the band, watch the replay window open with it. Then
@@ -239,8 +248,9 @@
         <div id="totp-panel-body"></div>
       </section>
 
-      <section class="card" aria-labelledby="url-h">
+      <section class="card" aria-labelledby="url-h" id="url-panel">
         <h2 id="url-h">4 · Signed URL — whose clock? <span class="spec-tag">HMAC expiry</span></h2>
+        <p class="analog">Real-world analog: S3 presigned URLs and CDN signed links whose "expiry" only binds if the serving side's clock is honest.</p>
         <p class="card-intro">
           An expiring signed URL (the S3-presigned / CDN-token pattern). Roll the <em>client</em> clock
           backward on an expired URL: nothing happens. Roll the <em>server</em> clock back: the dead
@@ -250,8 +260,9 @@
         <div id="url-panel-body"></div>
       </section>
 
-      <section class="card" aria-labelledby="replay-h">
+      <section class="card" aria-labelledby="replay-h" id="replay-panel">
         <h2 id="replay-h">5 · Replay cache across skewed clocks <span class="spec-tag">RFC 4120 §3.1.3</span></h2>
+        <p class="analog">Real-world analog: Kerberos authenticator replay windows, and any "reject requests older than N minutes" API defense running on a fleet with drifting clocks.</p>
         <p class="card-intro">
           "Reject anything older than 5 minutes," enforced by three servers whose clocks disagree.
           Replay caches are per-server, so a captured request that one server already saw and one
@@ -260,8 +271,9 @@
         <div id="replay-panel-body"></div>
       </section>
 
-      <section class="card" aria-labelledby="nodes-h">
+      <section class="card" aria-labelledby="nodes-h" id="nodes-panel">
         <h2 id="nodes-h">6 · Distributed nodes, one token <span class="spec-tag">Ed25519</span></h2>
+        <p class="analog">Real-world analog: a "revoke this session in 5 minutes" that lands at a different real instant on every node — and never, on the node whose clock lags.</p>
         <p class="card-intro">
           One Ed25519-signed token, three nodes, three independent clocks. Drag any node's skew and the
           accept/reject matrix shifts — while a running counter proves the signature was verified valid

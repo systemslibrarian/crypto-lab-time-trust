@@ -11,10 +11,11 @@ import { TOTP_STEP_SEC, totp, totpCounter, verifyTotp } from '../otp/totp';
 import { fmtSkew, fmtUtc } from '../time/clock';
 import type { ClockControl } from './clockPanel';
 import { byId, clear, el } from './dom';
+import type { Lab } from './lab';
 
 const STRIP_HALF = 3; // show T−3 … T+3
 
-export function renderTotpPanel(clock: ClockControl, scenario: Scenario): void {
+export function renderTotpPanel(clock: ClockControl, scenario: Scenario, lab: Lab): void {
   const host = byId<HTMLElement>('totp-panel-body');
   clear(host);
 
@@ -246,4 +247,26 @@ export function renderTotpPanel(clock: ClockControl, scenario: Scenario): void {
   );
   clock.subscribe((ms) => void render(ms));
   void render(clock.get());
+
+  lab.register('totp', {
+    sectionId: 'totp-panel',
+    title: 'TOTP acceptance window',
+    set(opts) {
+      if (typeof opts.tolerance === 'number') {
+        tolerance = opts.tolerance;
+        tolSelect.value = String(tolerance);
+      }
+      if (typeof opts.usedRecord === 'boolean') {
+        trackUsed = opts.usedRecord;
+        (usedToggle as HTMLInputElement).checked = trackUsed;
+      }
+      if (typeof opts.phoneSkew === 'number') {
+        phoneSkewSec = opts.phoneSkew;
+        skewSlider.value = String(phoneSkewSec);
+        skewLabel.textContent = `Phone clock skew: ${fmtSkew(phoneSkewSec)}`;
+        skewSlider.setAttribute('aria-valuetext', fmtSkew(phoneSkewSec));
+      }
+      void render(clock.get());
+    },
+  });
 }

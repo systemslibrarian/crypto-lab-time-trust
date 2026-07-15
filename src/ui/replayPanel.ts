@@ -8,6 +8,7 @@ import { DEFAULT_SKEW_WINDOW_SEC, makeRequest, serverCheck, type AuthRequest, ty
 import { fmtSkew, fmtUtc } from '../time/clock';
 import type { ClockControl } from './clockPanel';
 import { byId, clear, el } from './dom';
+import type { Lab } from './lab';
 import { resultBlock } from './verdict';
 
 interface Server {
@@ -20,7 +21,7 @@ interface Server {
   seenOriginal: boolean;
 }
 
-export function renderReplayPanel(clock: ClockControl, scenario: Scenario): void {
+export function renderReplayPanel(clock: ClockControl, scenario: Scenario, lab: Lab): void {
   const host = byId<HTMLElement>('replay-panel-body');
   clear(host);
 
@@ -87,15 +88,19 @@ export function renderReplayPanel(clock: ClockControl, scenario: Scenario): void
     })();
   });
 
+  const setSkew: Record<string, (n: number) => void> = {};
   for (const s of servers) {
     const slider = el('input', { type: 'range', id: `replay-skew-${s.name}`, min: '-360', max: '360', step: '30', value: String(s.skewSec) });
     const label = el('label', { for: `replay-skew-${s.name}` }, `Server ${s.name} clock skew: ${fmtSkew(s.skewSec)}`);
-    slider.addEventListener('input', () => {
-      s.skewSec = Number(slider.value);
+    const applySkew = (n: number) => {
+      s.skewSec = n;
+      slider.value = String(n);
       label.textContent = `Server ${s.name} clock skew: ${fmtSkew(s.skewSec)}`;
       slider.setAttribute('aria-valuetext', fmtSkew(s.skewSec));
       updateClockLines(clock.get());
-    });
+    };
+    setSkew[s.name] = applySkew;
+    slider.addEventListener('input', () => applySkew(Number(slider.value)));
     const replayBtn = el('button', { type: 'button' }, `Replay to ${s.name}`);
     replayBtn.addEventListener('click', () => {
       void (async () => {
@@ -141,4 +146,14 @@ export function renderReplayPanel(clock: ClockControl, scenario: Scenario): void
   })();
 
   clock.subscribe(updateClockLines);
+
+  lab.register('replay', {
+    sectionId: 'replay-panel',
+    title: 'Replay cache across skewed clocks',
+    set(opts) {
+      if (typeof opts.skewA === 'number') setSkew['A'](opts.skewA);
+      if (typeof opts.skewB === 'number') setSkew['B'](opts.skewB);
+      if (typeof opts.skewC === 'number') setSkew['C'](opts.skewC);
+    },
+  });
 }
