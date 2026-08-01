@@ -122,7 +122,7 @@ export function renderReplayPanel(clock: ClockControl, scenario: Scenario, lab: 
     el(
       'p',
       {},
-      `Policy on every server: accept a MAC-valid request whose timestamp is within ±${DEFAULT_SKEW_WINDOW_SEC} s of the local clock and which is not in the local replay cache (the Kerberos rule, RFC 4120 §3.1.3). The caches are per-server and not shared.`,
+      `Policy on every server: accept a MAC-valid request whose timestamp is within ±${DEFAULT_SKEW_WINDOW_SEC} s of the local clock and which is not in the local replay cache (the Kerberos rule, RFC 4120 §3.2.3). The caches are per-server and not shared.`,
     ),
     requestBox,
     el('div', { class: 'control-row' }, sendBtn),

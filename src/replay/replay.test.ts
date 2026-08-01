@@ -5,7 +5,7 @@ import { makeRequest, serverCheck } from './replay';
 const SECRET = utf8('replay-test-secret');
 const T = 3_000_000_000; // the moment the request is really sent
 
-describe('freshness window + per-server replay cache (RFC 4120 §3.1.3 style)', () => {
+describe('freshness window + per-server replay cache (RFC 4120 §3.2.3 style)', () => {
   it('same request, three skewed servers, three different outcomes', async () => {
     const req = await makeRequest(SECRET, 'transfer $100', T);
     // 6 minutes after sending: an honest clock calls it stale.

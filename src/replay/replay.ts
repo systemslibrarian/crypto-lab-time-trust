@@ -1,5 +1,5 @@
 /**
- * Kerberos-style freshness + replay protection (RFC 4120 §3.1.3): a request
+ * Kerberos-style freshness + replay protection (RFC 4120 §3.2.3): a request
  * carries the CLIENT's timestamp under a real MAC; each server accepts it only
  * if |server_now − timestamp| ≤ skew window (default 5 minutes) and the exact
  * authenticator has not been seen before. The replay cache is per-server and
@@ -61,7 +61,7 @@ export async function serverCheck(
     ],
     [
       {
-        name: `freshness |age| ≤ ${skewWindowSec} s (RFC 4120 §3.1.3)`,
+        name: `freshness |age| ≤ ${skewWindowSec} s (RFC 4120 §3.2.3)`,
         pass: fresh,
         detail: `server clock ${fmtUtc(serverNowSec * 1000)} − timestamp ${fmtUtc(req.timestampSec * 1000)} = ${ageSec} s`,
       },

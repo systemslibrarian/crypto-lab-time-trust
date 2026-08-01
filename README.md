@@ -32,7 +32,7 @@ The primitives are real, run in your browser, and are validated against RFC know
 3. **JWT split-brain (RFC 7519 §4.1, HS256).** One token, two verifiers 90 seconds apart — simultaneously valid at the auth server and expired at the resource server. A leeway control shows the standard skew band-aid and exactly what it costs.
 4. **TOTP acceptance window (RFC 6238).** A real code and a verifier whose ±W tolerance band you widen — watching the replay window open with it. Intercept a code and replay it: with the RFC 6238 §5.2 used-code record on, it's caught; off, a real HMAC match lets the replay through.
 5. **Signed URL — whose clock? (HMAC expiry).** Roll the *client* clock back on an expired URL: nothing. Roll the *server* clock back: the dead URL works again, with no forgery. The verifier has no client-clock parameter, and that absence is the lesson.
-6. **Replay cache across skewed clocks (RFC 4120 §3.1.3).** "Reject anything older than 5 minutes" on three servers with disagreeing clocks and per-server caches. A replay slips through the server whose slow clock still calls it fresh.
+6. **Replay cache across skewed clocks (RFC 4120 §3.2.3).** "Reject anything older than 5 minutes" on three servers with disagreeing clocks and per-server caches. A replay slips through the server whose slow clock still calls it fresh.
 7. **Distributed nodes, one token (Ed25519).** One signed token, three independent node clocks. The accept/reject matrix shifts as you drag skews, while a counter proves the signature was verified valid every single time.
 8. **Closing frame.** Which failures does NTP fix, which does Roughtime address, and which are unfixable by better timekeeping (the attacker who owns the clock source)?
 
