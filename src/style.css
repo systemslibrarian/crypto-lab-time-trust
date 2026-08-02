@@ -10,6 +10,9 @@
   --panel: #121d23;
   --panel-2: #18272f;
   --border: #2c4350;
+  /* Text-entry control boundaries: >= 3:1 vs both the field fill and the
+     surrounding panel (WCAG 1.4.11). Decorative borders stay subtle. */
+  --ctl-border: #5c7d8b;
   --text: #e6f1f5;
   --text-dim: #9fb9c4;
   --ok-text: #63d997;
@@ -28,6 +31,7 @@
   --panel: #ffffff;
   --panel-2: #e9f2f5;
   --border: #b0ccd6;
+  --ctl-border: #567380;
   --text: #12232a;
   --text-dim: #40606c;
   --ok-text: #0e6b33;
@@ -341,7 +345,7 @@ body {
   font: inherit;
   color: var(--text);
   background: var(--panel-2);
-  border: 1px solid var(--border);
+  border: 1px solid var(--ctl-border);
   border-radius: 8px;
   padding: 0.35rem 0.55rem;
   max-width: 12rem;
