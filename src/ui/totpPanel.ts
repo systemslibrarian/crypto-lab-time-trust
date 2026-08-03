@@ -34,7 +34,7 @@ export function renderTotpPanel(clock: ClockControl, scenario: Scenario, lab: La
     role: 'region',
     'aria-label': 'verifier acceptance windows',
   });
-  const bandNote = el('p', { class: 'readout' });
+  const bandNote = el('p', { class: 'readout', 'data-testid': 'totp-band' });
 
   const skewSlider = el('input', { type: 'range', id: 'totp-skew', min: '-120', max: '120', step: '5', value: '0' });
   const skewLabel = el('label', { for: 'totp-skew' }, '');
@@ -62,7 +62,18 @@ export function renderTotpPanel(clock: ClockControl, scenario: Scenario, lab: La
   const captureBtn = el('button', { type: 'button' }, 'Intercept (capture) the phone’s current code');
   const replayBtn = el('button', { type: 'button' }, 'Replay the intercepted code');
   const capturedNote = el('p', { class: 'readout' }, 'Nothing intercepted yet.');
-  const resultHost = el('div', { role: 'status', 'aria-live': 'polite' });
+  const resultHost = el('div', { role: 'status', 'aria-live': 'polite', 'data-testid': 'totp-result' });
+
+  /**
+   * The verifier state a displayed verdict was computed against. A verdict is
+   * only true of the clock and policy that produced it: once the master clock
+   * moves to another time step, or the tolerance / used-code policy changes,
+   * the block on screen ("matched window N, verifier is at N, tolerance ±1")
+   * is describing a verifier that no longer exists. It used to survive both,
+   * leaving a green ACCEPT — announced on an aria-live region — attached to a
+   * stale counter. Retire it instead of letting it outlive its inputs.
+   */
+  let resultCtx: { counter: number; tolerance: number; trackUsed: boolean } | null = null;
 
   let seq = 0;
   async function render(nowMs: number): Promise<void> {
@@ -78,6 +89,23 @@ export function renderTotpPanel(clock: ClockControl, scenario: Scenario, lab: La
       strip.push({ counter: cnt, code: await hotp(key, cnt) });
     }
     if (my !== seq) return;
+
+    if (
+      resultCtx &&
+      (resultCtx.counter !== verifierCounter ||
+        resultCtx.tolerance !== tolerance ||
+        resultCtx.trackUsed !== trackUsed)
+    ) {
+      resultCtx = null;
+      clear(resultHost);
+      resultHost.append(
+        el(
+          'p',
+          { class: 'readout', 'data-testid': 'totp-retired' },
+          'Previous verdict retired — the verifier’s clock or acceptance policy changed, so that decision no longer describes this verifier. Submit a code again.',
+        ),
+      );
+    }
 
     phoneCode.textContent = `${code.slice(0, 3)} ${code.slice(3)}`;
     phoneClock.textContent = `phone clock ${fmtUtc(phoneSec * 1000)} (${fmtSkew(phoneSkewSec)}) → counter T=${phoneCounter}`;
@@ -108,6 +136,7 @@ export function renderTotpPanel(clock: ClockControl, scenario: Scenario, lab: La
   async function submit(codeStr: string, isReplay: boolean): Promise<void> {
     const verifierSec = Math.floor(clock.get() / 1000);
     const r = await verifyTotp(key, codeStr, verifierSec, tolerance, trackUsed ? usedCodes : null);
+    resultCtx = { counter: totpCounter(verifierSec), tolerance, trackUsed };
     clear(resultHost);
     const mathLine = el(
       'p',

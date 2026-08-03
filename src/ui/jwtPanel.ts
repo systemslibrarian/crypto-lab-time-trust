@@ -55,9 +55,9 @@ export function renderJwtPanel(clock: ClockControl, scenario: Scenario, lab: Lab
   const skewLabel = el('label', { for: 'jwt-rs-skew' }, '');
   const leewayInput = el('input', { type: 'number', id: 'jwt-leeway', min: '0', max: '300', step: '15', value: '0' });
 
-  const authCard = el('div', { class: 'subcard' });
-  const rsCard = el('div', { class: 'subcard' });
-  const headline = el('p', { class: 'readout', role: 'status', 'aria-live': 'polite' });
+  const authCard = el('div', { class: 'subcard', 'data-testid': 'jwt-auth' });
+  const rsCard = el('div', { class: 'subcard', 'data-testid': 'jwt-rs' });
+  const headline = el('p', { class: 'readout', role: 'status', 'aria-live': 'polite', 'data-testid': 'jwt-headline' });
 
   const splitBtn = el('button', { type: 'button', class: 'primary' }, 'Jump to the split-brain moment');
   const splitNote = el('span', { class: 'readout' }, '');

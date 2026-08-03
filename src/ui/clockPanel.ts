@@ -163,9 +163,15 @@ const PRESETS: Preset[] = [
   {
     id: 'replay-slip',
     label: 'Replay slips through',
-    blurb: 'Six minutes later, the slow server still calls the replay fresh.',
+    blurb: 'Four minutes later, the slow server still calls the replay fresh.',
     focus: 'replay-panel',
-    clockOffsetMs: 6 * MIN,
+    // 4 min, not 6. The point of this preset is three servers rejecting or
+    // accepting for three DIFFERENT reasons (A: slow clock calls it fresh;
+    // B: cache hit; C: fast clock calls it stale). With ±4 min skews and the
+    // 300 s window that only holds for a master offset in (60 s, 300 s]: at
+    // 6 min B is already past its own freshness window and rejects as stale,
+    // so the "per-server caches don't compose" point never gets made.
+    clockOffsetMs: 4 * MIN,
     panels: { replay: { skewA: -240, skewB: 0, skewC: 240 } },
   },
   {
@@ -210,7 +216,7 @@ export function renderClockPanel(clock: ClockControl, lab: Lab): void {
   const host = byId<HTMLElement>('clock-panel-body');
   clear(host);
 
-  const nowLine = el('p', { class: 'clock-now' });
+  const nowLine = el('p', { class: 'clock-now', 'data-testid': 'clock-now' });
   const slider = el('input', {
     type: 'range',
     id: 'master-clock',

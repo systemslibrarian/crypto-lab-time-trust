@@ -54,7 +54,13 @@ export function renderCertPanel(clock: ClockControl, scenario: Scenario, lab: La
   const cert = scenario.cert;
   const tampered = parseCertificate(tamperSignatureBit(cert.der));
   let useTampered = false;
+  // Counted over the GENUINE certificate only. The sentence this feeds claims
+  // "result every time: VALID", so it must not silently absorb the runs made
+  // with the tamper toggle on — those really do return INVALID, and folding
+  // them into the same total made the panel state something false about its
+  // own history the moment a learner toggled the switch off again.
   let verifyCount = 0;
+  let verifyValidCount = 0;
   let stepTimer: ReturnType<typeof setTimeout> | null = null;
 
   const summary = el(
@@ -76,14 +82,17 @@ export function renderCertPanel(clock: ClockControl, scenario: Scenario, lab: La
   );
   const stepper = el('ol', { class: 'stepper', style: 'list-style:none;padding:0' }, ...stepEls);
 
-  const sigNote = el('p', { class: 'readout' });
+  const sigNote = el('p', { class: 'readout', 'data-testid': 'cert-sig-note' });
   const resultHost = el('div', {}, el('p', {}, '…'));
-  const stateLine = el('p', { class: 'readout', role: 'status', 'aria-live': 'polite' });
+  const stateLine = el('p', { class: 'readout', role: 'status', 'aria-live': 'polite', 'data-testid': 'cert-state' });
 
   function compute(nowMs: number): { dec: Decision; state: keyof typeof STATE_LABEL } {
     const c = useTampered ? tampered : cert;
     const sigOk = verifyCertSignature(c); // real Ed25519, every single time
-    verifyCount++;
+    if (!useTampered) {
+      verifyCount++;
+      if (sigOk) verifyValidCount++;
+    }
     const state = validityState(c.notBeforeMs, c.notAfterMs, nowMs);
     const dec = decide(
       [
@@ -118,7 +127,9 @@ export function renderCertPanel(clock: ClockControl, scenario: Scenario, lab: La
         {},
         useTampered
           ? 'tampered (1 bit flipped): every verification now returns INVALID at every clock position.'
-          : `unchanged. Verified ${verifyCount} times so far; result every time: VALID.`,
+          : verifyValidCount === verifyCount
+            ? `unchanged. Verified ${verifyCount} times so far; result every time: VALID.`
+            : `unchanged. Verified ${verifyCount} times so far; VALID only ${verifyValidCount} of them (unexpected!).`,
       ),
     );
     clear(resultHost);

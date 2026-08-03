@@ -50,7 +50,16 @@ export async function serverCheck(
   }
   const ageSec = serverNowSec - req.timestampSec;
   const fresh = Math.abs(ageSec) <= skewWindowSec;
-  const replayDetected = macOk && fresh && replayCache.has(req.mac);
+  /**
+   * Whether this server holds the authenticator is a fact about its cache;
+   * whether that fact DECIDES anything is gated on freshness, because RFC 4120
+   * §3.2.3 only requires the cache to span the skew window. Keep the two apart:
+   * reporting "not seen before by this server" about a stale request whose
+   * authenticator is sitting in that same server's cache states something
+   * flatly untrue, and the panel prints the cache size directly above it.
+   */
+  const seenBefore = replayCache.has(req.mac);
+  const replayDetected = macOk && fresh && seenBefore;
   const decision = decide(
     [
       {
@@ -70,7 +79,9 @@ export async function serverCheck(
         pass: !replayDetected,
         detail: replayDetected
           ? 'this exact authenticator was already accepted by THIS server'
-          : 'authenticator not seen before by this server',
+          : seenBefore
+            ? 'this server HAS seen this authenticator before, but the request already failed the freshness check — outside the skew window the cache is not consulted'
+            : 'authenticator not seen before by this server',
       },
     ],
   );

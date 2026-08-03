@@ -53,7 +53,7 @@ export function renderNodesPanel(clock: ClockControl, scenario: Scenario, lab: L
     ),
     tbody,
   );
-  const counterLine = el('p', { class: 'readout', role: 'status', 'aria-live': 'polite' });
+  const counterLine = el('p', { class: 'readout', role: 'status', 'aria-live': 'polite', 'data-testid': 'nodes-counter' });
   const slidersHost = el('div', { class: 'grid-3' });
 
   function render(nowMs: number): void {

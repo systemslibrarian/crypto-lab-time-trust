@@ -27,14 +27,14 @@ export function renderReplayPanel(clock: ClockControl, scenario: Scenario, lab: 
 
   let request: AuthRequest = scenario.initialRequest;
   const servers: Server[] = [
-    { name: 'A', skewSec: -240, cache: new Set(), card: el('div', { class: 'subcard' }), resultHost: el('div', {}), clockLine: el('p', { class: 'readout' }), seenOriginal: false },
-    { name: 'B', skewSec: 0, cache: new Set(), card: el('div', { class: 'subcard' }), resultHost: el('div', {}), clockLine: el('p', { class: 'readout' }), seenOriginal: false },
-    { name: 'C', skewSec: 240, cache: new Set(), card: el('div', { class: 'subcard' }), resultHost: el('div', {}), clockLine: el('p', { class: 'readout' }), seenOriginal: false },
+    { name: 'A', skewSec: -240, cache: new Set(), card: el('div', { class: 'subcard', 'data-testid': 'replay-server-A' }), resultHost: el('div', {}), clockLine: el('p', { class: 'readout' }), seenOriginal: false },
+    { name: 'B', skewSec: 0, cache: new Set(), card: el('div', { class: 'subcard', 'data-testid': 'replay-server-B' }), resultHost: el('div', {}), clockLine: el('p', { class: 'readout' }), seenOriginal: false },
+    { name: 'C', skewSec: 240, cache: new Set(), card: el('div', { class: 'subcard', 'data-testid': 'replay-server-C' }), resultHost: el('div', {}), clockLine: el('p', { class: 'readout' }), seenOriginal: false },
   ];
 
   const requestBox = el('div', { class: 'token-box', tabindex: '0', role: 'region', 'aria-label': 'the captured request' });
   const sendBtn = el('button', { type: 'button', class: 'primary' }, 'Send a fresh request (load balancer routes it to server B)');
-  const statusLine = el('p', { class: 'readout', role: 'status', 'aria-live': 'polite' });
+  const statusLine = el('p', { class: 'readout', role: 'status', 'aria-live': 'polite', 'data-testid': 'replay-status' });
 
   function showRequest(): void {
     clear(requestBox);
@@ -131,7 +131,7 @@ export function renderReplayPanel(clock: ClockControl, scenario: Scenario, lab: 
     el(
       'p',
       { class: 'scope-note' },
-      'The recipe: send once (server B accepts and caches it), slide the clock ~6 minutes forward, then replay. B rejects it — cache hit. C rejects it — its fast clock says it is ancient. A accepts it — its slow clock computes a small age, and A never saw the original. Nothing cryptographic distinguishes the replay from the original; the bytes are identical.',
+      'The recipe: send once (server B accepts and caches it), slide the clock ~4 minutes forward, then replay. B rejects it — cache hit. C rejects it — its fast clock says it is ancient. A accepts it — its slow clock computes a small age, and A never saw the original. Nothing cryptographic distinguishes the replay from the original; the bytes are identical. Push the clock much further and B starts rejecting for the duller reason — its own freshness window — which is why the preset stops at four minutes.',
     ),
   );
 
@@ -141,7 +141,7 @@ export function renderReplayPanel(clock: ClockControl, scenario: Scenario, lab: 
     b.seenOriginal = true;
     showRequest();
     await deliver(b, false);
-    statusLine.textContent = 'At load, the request above was sent to server B at T+0 and accepted (it is in B’s cache). Move the clock forward ~6 minutes, then replay it to each server.';
+    statusLine.textContent = 'At load, the request above was sent to server B at T+0 and accepted (it is in B’s cache). Move the clock forward ~4 minutes, then replay it to each server.';
     updateClockLines(clock.get());
   })();
 

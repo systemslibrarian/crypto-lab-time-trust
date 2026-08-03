@@ -46,6 +46,24 @@ describe('freshness window + per-server replay cache (RFC 4120 §3.2.3 style)', 
     expect(replayed.crypto[0].ok).toBe(true);
   });
 
+  it('never claims an authenticator is unseen when that server has it cached', async () => {
+    // Regression: the cache lookup is gated on freshness (RFC 4120 §3.2.3 only
+    // requires the cache to span the window), and the reported REASON used to
+    // collapse "gate short-circuited" into "authenticator not seen before by
+    // this server" — a false statement printed next to a cache showing 1 entry.
+    const cache = new Set<string>();
+    const req = await makeRequest(SECRET, 'x', T);
+    expect((await serverCheck(SECRET, req, T + 10, cache)).verdict).toBe('accept');
+    expect(cache.size).toBe(1);
+
+    const stale = await serverCheck(SECRET, req, T + 600, cache); // past the window
+    expect(stale.verdict).toBe('reject');
+    expect(stale.replayDetected).toBe(false); // freshness, not the cache, decided
+    const cacheCheck = stale.policy.find((p) => p.name === 'not in replay cache');
+    expect(cacheCheck?.detail).not.toContain('not seen before');
+    expect(cacheCheck?.detail).toContain('HAS seen this authenticator');
+  });
+
   it('rejects a tampered body outright — replay ≠ forgery', async () => {
     const req = await makeRequest(SECRET, 'transfer $100', T);
     const forged = { ...req, body: 'transfer $9999' };

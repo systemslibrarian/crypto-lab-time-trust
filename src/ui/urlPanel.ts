@@ -30,8 +30,8 @@ export function renderUrlPanel(clock: ClockControl, scenario: Scenario, lab: Lab
   const serverSlider = el('input', { type: 'range', id: 'url-server-skew', min: '-3600', max: '3600', step: '60', value: '0' });
   const serverLabel = el('label', { for: 'url-server-skew' }, '');
 
-  const clientView = el('p', { class: 'readout' });
-  const serverCard = el('div', {});
+  const clientView = el('p', { class: 'readout', 'data-testid': 'url-client-view' });
+  const serverCard = el('div', { 'data-testid': 'url-server' });
   const jumpBtn = el('button', { type: 'button' }, 'Jump past expiry (T+21 m)');
   const requestBtn = el('button', { type: 'button', class: 'primary' }, 'Request the file');
   const hint = el('p', { class: 'scope-note' });
