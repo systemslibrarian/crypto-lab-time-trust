@@ -73,7 +73,7 @@ npm run test:a11y  # axe-core WCAG 2.1 AA gate, both themes (needs: npx playwrig
 ## Related Demos
 
 - **[Chain of Trust](https://crypto-lab.systemslibrarian.dev/)** — full X.509 path building, name constraints, and revocation. The certificate panel here checks *only* validity dates and links out to that demo for everything else.
-- **[Crypto Lab suite](https://crypto-lab.systemslibrarian.dev/)** — 170+ browser demos of real cryptography.
+- **[Crypto Lab suite](https://crypto-lab.systemslibrarian.dev/)** — browser demos of real cryptography.
 
 ## Build & Verify
 
@@ -93,6 +93,6 @@ Everything runs client-side. Each clock change re-runs a handful of Ed25519/HMAC
 
 ---
 
-*One of 170+ browser demos in the [Crypto Lab](https://crypto-lab.systemslibrarian.dev/) suite.*
+*Part of the [Crypto Lab](https://crypto-lab.systemslibrarian.dev/) suite.*
 
 *"So whether you eat or drink or whatever you do, do it all for the glory of God." — 1 Corinthians 10:31*
