@@ -23,8 +23,10 @@
   --panel: #121d23;
   --panel-2: #18272f;
   --border: #2c4350;
-  /* Text-entry control boundaries: >= 3:1 vs both the field fill and the
-     surrounding panel (WCAG 1.4.11). Decorative borders stay subtle. */
+  /* Every AUTHORED control boundary — text fields, selects AND buttons — at
+     >= 3:1 against both the control's own fill and the surrounding panel
+     (WCAG 1.4.11). `--border` is for surfaces: card outlines, table rules,
+     chips, dividers, none of which carry that duty. */
   --ctl-border: #5c7d8b;
   --text: #e6f1f5;
   --text-dim: #9fb9c4;
@@ -305,12 +307,22 @@ body {
 
 /* ---------- controls ---------- */
 
+/* WCAG 1.4.11. A button here is a `--panel-2` fill on a `--panel` card — 1.12:1
+   in dark, 1.14:1 in light — so its BORDER is the only thing that says where the
+   control is, and `--border` is a SURFACE divider: 1.65:1 against the card and
+   1.48:1 against the button's own fill. That is every button on this page (the
+   eight clock steps, the six moments, Reset, both zooms, four presets, three
+   "Replay to", the TOTP row, Request the file, Exit). `--ctl-border` is the
+   token that exists for exactly this and was applied to nothing but
+   `.field input` and `.field select` — the one place the old spec's 1.4.11
+   check looked. It measures 3.89:1 against the card and 3.48:1 against the fill
+   in dark, 5.04:1 and 4.44:1 in light. */
 #app button {
   font: inherit;
   font-size: 0.9rem;
   color: var(--text);
   background: var(--panel-2);
-  border: 1px solid var(--border);
+  border: 1px solid var(--ctl-border);
   border-radius: 8px;
   padding: 0.42rem 0.85rem;
   cursor: pointer;
@@ -373,6 +385,23 @@ body {
     right 0.55rem top 55%;
   background-size: 0.35rem 0.35rem;
   background-repeat: no-repeat;
+}
+
+/* These three classes are where this lab prints GENERATED values inside prose —
+   the 40-hex-char TOTP secret, signature and public-key prefixes, MAC digests.
+   Without a break opportunity a single such token is one unbreakable word: the
+   TOTP secret measured 339px in a 281px content box and pushed the DOCUMENT to
+   388px at a 380px viewport (WCAG 1.4.10). It was INTERMITTENT — the secret is
+   `crypto.getRandomValues` per page load and the font is proportional, so the
+   overflow ranged from 0 to 10px across loads and a gate that scanned once could
+   pass on a narrow draw. `anywhere`, not `break-word`: `break-word` only breaks
+   a word that would otherwise overflow ALONE on its own line, which is not this
+   case, and unlike `word-break: break-all` `anywhere` still prefers ordinary
+   word boundaries in the surrounding prose. */
+.readout,
+.scope-note,
+.checks .detail {
+  overflow-wrap: anywhere;
 }
 
 .readout {

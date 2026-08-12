@@ -1,125 +1,66 @@
-import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
-
-const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
-
-async function prepare(page: Page): Promise<void> {
-  await page.addStyleTag({ content: `*,*::before,*::after{animation:none!important;transition:none!important}` });
-  await page.evaluate(() => {
-    document.querySelectorAll('details').forEach((d) => ((d as HTMLDetailsElement).open = true));
-    document.querySelectorAll<HTMLElement>('[hidden],[role="tabpanel"]').forEach((el) => {
-      el.removeAttribute('hidden');
-      el.style.display = '';
-      el.classList.add('active', 'is-active', 'open');
-    });
-  });
-  // run a scenario preset so alarm states, the event rail, and flashes render
-  await page.getByRole('button', { name: /Resurrect an expired URL/ }).click().catch(() => {});
-  // open the guided tour so its banner is on screen for the scan
-  await page.getByRole('button', { name: /Take the 30-second tour/ }).click().catch(() => {});
-  // drive the live demo so dynamic result regions render before the scan
-  for (const b of await page.locator('#app button').all()) {
-    const label = ((await b.textContent()) || '').toLowerCase();
-    if (/run|verify|request|send|replay|intercept|split|copy/.test(label)) await b.click().catch(() => {});
-  }
-  // move the master clock so verdicts (incl. alarm states) are on screen
-  await page.locator('#master-clock').fill('1260').catch(() => {}); // T+21 m
-  await page.locator('#master-clock').dispatchEvent('input').catch(() => {});
-  await page.waitForTimeout(400);
-}
-
-async function scan(page: Page): Promise<void> {
-  const { violations } = await new AxeBuilder({ page }).withTags(TAGS).analyze();
-  expect(
-    violations.map((v) => ({ id: v.id, impact: v.impact, nodes: v.nodes.map((n) => n.target.join(' ')).slice(0, 5) })),
-  ).toEqual([]);
-}
+import { expect, test } from '@playwright/test';
+import {
+  boot,
+  driveAllStates,
+  expectBaselineNotStale,
+  NARROW,
+  reportCollected,
+  watchPageErrors,
+} from './gate';
 
 /**
- * WCAG 1.4.11 regression: text-entry control boundaries (input/textarea/select
- * borders) must hit >= 3:1 against at least one adjacent surface, after
- * compositing translucent colors over the real ancestor backgrounds.
+ * WCAG A/AA regression gate for Time Trust.
+ *
+ * The lab is driven along everything it teaches, and EVERY state is scanned
+ * while it is on screen: the arrival page at T+0, where every verifier has
+ * already run; the certificate stepper mid-walk and finished, its DER dump
+ * disclosed, and its signature bit flipped and un-flipped; all six "jump to"
+ * moments, which are the verdict-flip states the whole lab is built on; both
+ * timeline zooms; the JWT split-brain, its opposite skew, its widened leeway,
+ * and the zero-skew state where the jump button is `disabled` and the panel
+ * explains why; the TOTP panel's replay-with-nothing-captured branch, a code
+ * that matches no window, an accepted first use, a retired verdict, a replay
+ * caught by the used-code record and — with the record off — a replay accepted
+ * by a genuine HMAC match; both ends of the tolerance select and the phone-skew
+ * slider; the signed URL rolled back on the client (nothing) and on the server
+ * (resurrected); a replay walked through all three servers WITH the clock moved
+ * between, so each rejects or accepts for its own different reason; both node
+ * skews at their extremes; all four scenario presets; and the guided tour walked
+ * one real step at a time, plus both of its exits.
+ *
+ * Four configurations: {dark, light} × {1280, 380}. The spec this replaces ran
+ * four tests, all at Playwright's default 1280 viewport, so the
+ * `@media (max-width: 640px)` block that collapses `.grid-2` and `.grid-3` to a
+ * single column had never been rendered by any test in this repo.
+ *
+ * See `gate.ts` for what the old spec did: it injected motion suppression over
+ * the lab's own reduced-motion blocks, stripped `hidden` from the guided tour's
+ * `role="status"` banner to scan it EMPTY, swallowed every missing control with
+ * `.catch(() => {})`, drove the page by regex-matching button labels, scanned
+ * ONCE after setting the master clock had already re-rendered every panel it had
+ * built, and pointed its 1.4.11 check at exactly the selectors `--ctl-border`
+ * was applied to.
  */
-async function measureControlBorders(
-  page: Page,
-): Promise<Array<{ sel: string; best: number }>> {
-  return page.evaluate(() => {
-    const parse = (c: string): number[] => {
-      const m = c.match(/rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:[,\s/]+([\d.]+))?\s*\)/);
-      return m ? [+m[1], +m[2], +m[3], m[4] === undefined ? 1 : +m[4]] : [0, 0, 0, 0];
-    };
-    const comp = (fg: number[], bg: number[]): number[] =>
-      [0, 1, 2].map((i) => fg[i] * fg[3] + bg[i] * (1 - fg[3])).concat([1]);
-    const lum = ([r, g, b]: number[]): number => {
-      const f = (v: number) => {
-        v /= 255;
-        return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
-      };
-      return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
-    };
-    const ratio = (a: number[], b: number[]): number => {
-      const l1 = lum(a);
-      const l2 = lum(b);
-      return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
-    };
-    const effBg = (start: Element | null): number[] => {
-      const stack: number[][] = [];
-      let node: Element | null = start;
-      while (node) {
-        const c = parse(getComputedStyle(node).backgroundColor);
-        if (c[3] > 0) stack.push(c);
-        if (c[3] >= 1) break;
-        node = node.parentElement;
-      }
-      let bg = [255, 255, 255, 1];
-      for (let i = stack.length - 1; i >= 0; i--) bg = comp(stack[i], bg);
-      return bg;
-    };
-    const TEXTY = ['', 'text', 'number', 'password', 'email', 'search', 'url', 'tel'];
-    const out: Array<{ sel: string; best: number }> = [];
-    document.querySelectorAll('input, textarea, select').forEach((el) => {
-      if (el.tagName === 'INPUT' && !TEXTY.includes((el.getAttribute('type') || '').toLowerCase())) return;
-      const cs = getComputedStyle(el);
-      const rect = el.getBoundingClientRect();
-      if (cs.display === 'none' || cs.visibility === 'hidden' || rect.width === 0 || rect.height === 0) return;
-      if ((parseFloat(cs.borderTopWidth) || 0) === 0) return;
-      const outer = effBg(el.parentElement);
-      const ownBg = parse(cs.backgroundColor);
-      const inner = ownBg[3] >= 1 ? ownBg : comp(ownBg, outer);
-      const borderRaw = parse(cs.borderTopColor);
-      const best = Math.max(ratio(comp(borderRaw, outer), outer), ratio(comp(borderRaw, inner), inner));
-      out.push({
-        sel: el.tagName.toLowerCase() + (el.id ? '#' + el.id : ''),
-        best: Math.round(best * 100) / 100,
-      });
-    });
-    return out;
-  });
-}
 
 for (const theme of ['dark', 'light'] as const) {
-  test(`text control borders >= 3:1 — ${theme} theme`, async ({ page }) => {
-    await page.goto('.');
-    if (theme === 'light') {
-      await page.locator('#cl-theme-toggle').click();
-      await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-    }
-    const rows = await measureControlBorders(page);
-    expect(rows.length).toBeGreaterThan(0);
-    expect(rows.filter((r) => r.best < 3)).toEqual([]);
+  test(`no WCAG A/AA violations in ${theme} theme`, async ({ page }) => {
+    test.setTimeout(900_000);
+    const errors = watchPageErrors(page);
+    await boot(page, theme);
+    await driveAllStates(page, theme);
+    expect(errors, errors.join('\n')).toEqual([]);
+    expectBaselineNotStale();
+    reportCollected();
+  });
+
+  test(`no WCAG A/AA violations in ${theme} theme at 380px`, async ({ page }) => {
+    test.setTimeout(900_000);
+    const errors = watchPageErrors(page);
+    await page.setViewportSize(NARROW);
+    await boot(page, theme);
+    await driveAllStates(page, `${theme} @380px`);
+    expect(errors, errors.join('\n')).toEqual([]);
+    expectBaselineNotStale();
+    reportCollected();
   });
 }
-
-test('no WCAG A/AA violations — dark theme', async ({ page }) => {
-  await page.goto('.');
-  await prepare(page);
-  await scan(page);
-});
-
-test('no WCAG A/AA violations — light theme', async ({ page }) => {
-  await page.goto('.');
-  await page.locator('#cl-theme-toggle').click();
-  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-  await prepare(page);
-  await scan(page);
-});
