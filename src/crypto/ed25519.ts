@@ -1,5 +1,7 @@
 /**
- * Ed25519 (RFC 8032) via @noble/curves — a small, audited, pure-JS library.
+ * Ed25519 (RFC 8032) via @noble/curves — a small, pure-JS library. Its latest
+ * independent audit is "at version 2.3.0, in Aug 2026, by [Trail of Bits]",
+ * scope "everything"; the pin here is ^2.4.0, one release past it.
  * Chosen over WebCrypto because Ed25519 in SubtleCrypto is still not available
  * in every shipping browser; the signatures and verifications here are real.
  * Validated against the RFC 8032 §7.1 test vectors.
