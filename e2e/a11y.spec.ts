@@ -28,8 +28,10 @@ import {
  * skews at their extremes; all four scenario presets; and the guided tour walked
  * one real step at a time, plus both of its exits.
  *
- * Four configurations: {dark, light} × {1280, 380}. The spec this replaces ran
- * four tests, all at Playwright's default 1280 viewport, so the
+ * Two supported configurations: dark × {1280, 380}. The page intentionally
+ * pins dark before first paint and removed its old theme toggle; testing a
+ * synthetic light setting would not test a state students can reach. The spec
+ * this replaces ran four tests, all at Playwright's default 1280 viewport, so the
  * `@media (max-width: 640px)` block that collapses `.grid-2` and `.grid-3` to a
  * single column had never been rendered by any test in this repo.
  *
@@ -42,7 +44,7 @@ import {
  * was applied to.
  */
 
-for (const theme of ['dark', 'light'] as const) {
+for (const theme of ['dark'] as const) {
   test(`no WCAG A/AA violations in ${theme} theme`, async ({ page }) => {
     test.setTimeout(900_000);
     const errors = watchPageErrors(page);

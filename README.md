@@ -67,7 +67,7 @@ npm install
 npm run dev        # Vite dev server
 npm test           # 102 unit tests (RFC KATs + verifiers)
 npm run build      # typecheck + production build
-npm run test:a11y  # axe-core WCAG 2.1 AA gate, both themes (needs: npx playwright install chromium)
+npm run test:a11y  # axe-core WCAG 2.1 AA gate, dark theme at desktop + 380px (needs: npx playwright install chromium)
 ```
 
 ## Related Demos
@@ -85,7 +85,7 @@ npm run test:a11y  # axe-core WCAG 2.1 AA gate, both themes (needs: npx playwrig
   - TOTP — RFC 6238 Appendix B, 6 times × 3 hashes (`src/otp/otp.test.ts`) ×18
   - JWS HS256 — RFC 7515 Appendix A.1 (`src/jwt/jwt.test.ts`) ×1
 - The remaining tests cover DER round-trips and strict fail-closed parsing, the X.509 validity state machine (inclusive bounds), the JWT/URL/replay/token verifiers, the fail-closed decision combinator, and the specific "system fails, primitive holds" outcomes each panel demonstrates.
-- **Accessibility gate:** `@axe-core/playwright` scans the production build for zero WCAG 2.1 A/AA violations in **both** themes (`e2e/a11y.spec.ts`); the GitHub Pages deploy is blocked if it fails.
+- **Accessibility gate:** `@axe-core/playwright` scans every driven state in the supported **dark** theme at desktop and 380 px for zero WCAG 2.1 A/AA violations (`e2e/a11y.spec.ts`); the GitHub Pages deploy is blocked if it fails.
 
 ## Performance
 

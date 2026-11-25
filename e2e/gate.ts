@@ -229,11 +229,10 @@ export async function assertSingleBanner(page: Page): Promise<void> {
  * measuring an empty live region no reader can produce. So the computed
  * `display` is read off the live element rather than reasoned about from CSS.
  *
- * The theme is seeded through `localStorage` rather than by clicking the
- * toggle, which also pins a real failure mode: `index.html`'s anti-flash script
- * reads `localStorage.getItem('theme')` and the shared bar's toggle writes
- * `localStorage.setItem('theme', …)`. If those keys drift apart the theme
- * silently stops persisting.
+ * Dark is the only supported theme. `index.html` pins it before first paint and
+ * overwrites any legacy light preference left from the removed theme toggle.
+ * The gate seeds and then asserts that contract instead of auditing a synthetic
+ * light state students cannot reach.
  *
  * The defaults are asserted at length because this lab is ENTIRELY defaults.
  * Everything on the page is a verifier already running against a shipped skew:
@@ -244,7 +243,7 @@ export async function assertSingleBanner(page: Page): Promise<void> {
  * of them shipping the other way round would mean the old gate had been scanning
  * the alarm states and never the clean ones, or the reverse.
  */
-export async function boot(page: Page, theme: 'dark' | 'light'): Promise<void> {
+export async function boot(page: Page, theme: 'dark'): Promise<void> {
   // A click on a control that never becomes actionable otherwise burns the whole
   // test timeout and reports nothing useful. 20s turns that silent hang into a
   // named failure naming the locator.
