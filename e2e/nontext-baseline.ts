@@ -13,31 +13,12 @@
  * outside its host and the oracle measures it against the host's backdrop, so
  * that ratio is NOT trustworthy — hand-measure before acting on it.
  *
- * What the live oracle finds on this lab, over {dark, light} × {1280, 380} and
- * every state the drive builds, is exactly the two entries below — both in the
- * SHARED Crypto Lab top bar, and neither one this repo's to fix.
- *
- * `.cl-btn` draws its edge as
- * `1px solid color-mix(in srgb, var(--accent, #35d6bb) 38%, transparent)` over
- * the bar's fixed `#0b1512`. This lab's `--accent` is `#0891b2`, so the
- * composited edge resolves to rgb(10, 68, 79): 1.73:1 against the bar,
- * IDENTICALLY IN BOTH THEMES, because the bar is always dark and `--accent` is
- * one value shared by both themes here. The number is accent-dependent, which is
- * why sibling repos in this fleet record different ones for byte-identical CSS.
- * `CLAUDE.md` is explicit that a change every lab should get is a deliberate
- * reviewed fleet-wide pass and never an overwrite driven from one repo, so it is
- * measured here, ratcheted here, and reported upward.
- *
- * Everything inside `<main id="app">`, the hero and the footer is audited with
- * no exemption and comes back clean. One finding that WAS here has been fixed
- * rather than baselined, and its absence from this file is the ratchet working:
- * `#app button`, which drew its edge with the surface-divider `--border` at
- * 1.65:1 against its card and 1.48:1 against its own near-identical fill. That
- * is every button on the page; it now uses `--ctl-border` at 3.88:1 / 5.05:1.
+ * The supported dark theme is driven at 1280 px and 380 px through every state
+ * the lab builds. The baseline is empty: both the page controls and the shared
+ * top-bar links now meet the 3:1 non-text contrast requirement. A new finding,
+ * a worsened ratio or a stale baseline entry still fails the gate.
  */
 export const NONTEXT_BASELINE: Record<
   string,
   { ratio: number; required: number; unverified: boolean }
-> = {
-  'control-boundary|a.cl-btn': { ratio: 1.73, required: 3, unverified: false },
-};
+> = {};
