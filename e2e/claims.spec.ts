@@ -39,6 +39,17 @@ async function open(page: Page): Promise<void> {
   await ready(page);
 }
 
+test('the closing lesson distinguishes plain NTP, NTS, and local-clock compromise', async ({ page }) => {
+  await open(page);
+  const closing = page.locator('section[aria-labelledby="close-h"]');
+  await expect(closing).toContainText('Plain NTP does not authenticate its packets');
+  await expect(closing).toContainText('Network Time Security (NTS, RFC 8915)');
+  await expect(closing).toContainText('TLS key establishment and AEAD protection');
+  await expect(closing).toContainText(
+    'Neither protects a verifier whose host or local clock is already compromised',
+  );
+});
+
 /** Move the master clock to a signed offset in seconds from the demo epoch. */
 async function setClock(page: Page, offsetSec: number): Promise<void> {
   // `fill` on a range input dispatches exactly one `input` event, which matters

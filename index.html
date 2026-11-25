@@ -306,8 +306,10 @@
               <td><strong>NTP</strong></td>
               <td>
                 Ordinary drift between cooperating machines. Syncing clocks to a shared reference
-                shrinks the disagreement window. NTP itself is largely unauthenticated, which is its
-                own weakness.
+                shrinks the disagreement window. Plain NTP does not authenticate its packets;
+                Network Time Security (NTS, RFC 8915) adds TLS key establishment and AEAD protection
+                for client-server NTP exchanges. Neither protects a verifier whose host or local
+                clock is already compromised.
               </td>
             </tr>
             <tr>

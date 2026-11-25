@@ -58,14 +58,14 @@ These are the failures the lab *demonstrates*, each against the real primitive:
 
 ## Real-World Usage
 
-The clock is load-bearing in TLS certificate validity (RFC 5280), JWT/OAuth `exp`/`nbf` (RFC 7519), TOTP authenticators (RFC 6238), Kerberos authenticator freshness (RFC 4120), AWS S3 presigned URLs and CDN signed URLs, and signed-cookie/session expiry. Documented incidents in this family include mass outages from expired certificates, JWT clock-skew authentication bugs, and replay windows created by generous skew tolerances. NTP (drift between honest peers) and Roughtime (a cryptographically auditable time source over a hostile network) address parts of the problem; neither helps when the adversary owns the clock the verifier reads.
+The clock is load-bearing in TLS certificate validity (RFC 5280), JWT/OAuth `exp`/`nbf` (RFC 7519), TOTP authenticators (RFC 6238), Kerberos authenticator freshness (RFC 4120), AWS S3 presigned URLs and CDN signed URLs, and signed-cookie/session expiry. Documented incidents in this family include mass outages from expired certificates, JWT clock-skew authentication bugs, and replay windows created by generous skew tolerances. Plain NTP reduces drift but does not authenticate its packets; Network Time Security (NTS, RFC 8915) adds TLS key establishment and AEAD protection for client-server NTP exchanges. Roughtime provides cryptographically auditable time over a hostile network. None of them protects a verifier whose host or local clock is already compromised.
 
 ## How to Run Locally
 
 ```bash
 npm install
 npm run dev        # Vite dev server
-npm test           # 99 unit tests (RFC KATs + verifiers)
+npm test           # 102 unit tests (RFC KATs + verifiers)
 npm run build      # typecheck + production build
 npm run test:a11y  # axe-core WCAG 2.1 AA gate, both themes (needs: npx playwright install chromium)
 ```
@@ -77,7 +77,7 @@ npm run test:a11y  # axe-core WCAG 2.1 AA gate, both themes (needs: npx playwrig
 
 ## Build & Verify
 
-- **99 unit tests** (Vitest), of which **42 are spec known-answer tests**:
+- **102 unit tests** (Vitest), of which **42 are spec known-answer tests**:
   - Ed25519 — RFC 8032 §7.1 TEST 1–3 (`src/crypto/kats.test.ts`) ×3
   - HMAC-SHA-256 — RFC 4231 TC1–4, 6, 7 (`src/crypto/kats.test.ts`) ×6
   - HMAC-SHA-512 — RFC 4231 TC1–2 ×2, HMAC-SHA-1 — RFC 2202 TC1–2 ×2
